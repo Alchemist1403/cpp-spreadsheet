@@ -3,7 +3,8 @@
 #include "FormulaLexer.h"
 #include "common.h"
 
-#include <forward_list>
+#include <memory>
+#include <vector>
 #include <functional>
 #include <stdexcept>
 
@@ -11,38 +12,30 @@ namespace ASTImpl {
 class Expr;
 }
 
+class SheetInterface;
+
 class ParsingError : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
 class FormulaAST {
 public:
-    explicit FormulaAST(std::unique_ptr<ASTImpl::Expr> root_expr,
-                        std::forward_list<Position> cells);
+    explicit FormulaAST(std::unique_ptr<ASTImpl::Expr> root_expr,std::vector<Position> referenced_cells);
+    
     FormulaAST(FormulaAST&&) = default;
     FormulaAST& operator=(FormulaAST&&) = default;
     ~FormulaAST();
 
-    double Execute(/*добавьте нужные аргументы*/ args) const;
-    void PrintCells(std::ostream& out) const;
+    double Execute(const SheetInterface& sheet) const;
+
     void Print(std::ostream& out) const;
     void PrintFormula(std::ostream& out) const;
 
-    std::forward_list<Position>& GetCells() {
-        return cells_;
-    }
-
-    const std::forward_list<Position>& GetCells() const {
-        return cells_;
-    }
+    const std::vector<Position>& GetReferencedCells() const;
 
 private:
     std::unique_ptr<ASTImpl::Expr> root_expr_;
-
-    // physically stores cells so that they can be
-    // efficiently traversed without going through
-    // the whole AST
-    std::forward_list<Position> cells_;
+    std::vector<Position> referenced_cells_;
 };
 
 FormulaAST ParseFormulaAST(std::istream& in);
