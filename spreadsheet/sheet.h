@@ -31,6 +31,7 @@ private:
     int max_col_ = -1;
 
     void UpdatePrintableArea(const Position& pos, bool is_cleared);
+    void ValidatePosition(const Position& pos) const;
     Cell* GetConcreteCell(Position pos);
     const Cell* GetConcreteCell(Position pos) const;
 };

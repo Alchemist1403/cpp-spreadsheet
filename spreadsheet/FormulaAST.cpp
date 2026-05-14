@@ -72,8 +72,10 @@ public:
         Divide = '/',
     };
 
-    explicit BinaryOpExpr(Type type, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
-        : type_(type), lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
+    explicit BinaryOpExpr(Type type, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs):
+        type_(type),
+        lhs_(std::move(lhs)), 
+        rhs_(std::move(rhs)) {}
 
     void Print(std::ostream& out) const override {
         out << '(' << static_cast<char>(type_) << ' ';
@@ -91,11 +93,17 @@ public:
 
     ExprPrecedence GetPrecedence() const override {
         switch (type_) {
-            case Add: return EP_ADD;
-            case Subtract: return EP_SUB;
-            case Multiply: return EP_MUL;
-            case Divide: return EP_DIV;
-            default: assert(false); return EP_END;
+            case Add: 
+                return EP_ADD;
+            case Subtract: 
+                return EP_SUB;
+            case Multiply: 
+                return EP_MUL;
+            case Divide: 
+                return EP_DIV;
+            default: 
+                assert(false); 
+                return EP_END;
         }
     }
 
@@ -105,11 +113,19 @@ public:
         double result = 0.0;
 
         switch (type_) {
-            case Add: result = left_val + right_val; break;
-            case Subtract: result = left_val - right_val; break;
-            case Multiply: result = left_val * right_val; break;
+            case Add: 
+                result = left_val + right_val;
+                break;
+            case Subtract: 
+                result = left_val - right_val; 
+                break;
+            case Multiply: 
+                result = left_val * right_val; 
+                break;
             case Divide:
-                if (right_val == 0.0) throw FormulaError(FormulaError::Category::Arithmetic);
+                if (right_val == 0.0) {
+                    throw FormulaError(FormulaError::Category::Arithmetic);
+                }
                 result = left_val / right_val;
                 break;
         }
@@ -134,7 +150,8 @@ public:
     };
 
     explicit UnaryOpExpr(Type type, std::unique_ptr<Expr> operand)
-        : type_(type), operand_(std::move(operand)) {}
+        : type_(type), 
+        operand_(std::move(operand)) {}
 
     void Print(std::ostream& out) const override {
         out << '(' << static_cast<char>(type_) << ' ';
@@ -153,8 +170,15 @@ public:
 
     double Execute(const SheetInterface& sheet) const override {
         double val = operand_->Execute(sheet);
-        if (type_ == UnaryMinus) val = -val;
-        if (!std::isfinite(val)) throw FormulaError(FormulaError::Category::Arithmetic);
+
+        if (type_ == UnaryMinus) {
+            val = -val;
+        }
+
+        if (!std::isfinite(val)) {
+            throw FormulaError(FormulaError::Category::Arithmetic);
+        }
+
         return val;
     }
 
@@ -167,9 +191,17 @@ class NumberExpr final : public Expr {
 public:
     explicit NumberExpr(double value) : value_(value) {}
 
-    void Print(std::ostream& out) const override { out << value_; }
-    void DoPrintFormula(std::ostream& out, ExprPrecedence) const override { out << value_; }
-    ExprPrecedence GetPrecedence() const override { return EP_ATOM; }
+    void Print(std::ostream& out) const override {
+        out << value_;
+    }
+
+    void DoPrintFormula(std::ostream& out, ExprPrecedence) const override {
+        out << value_;
+    }
+
+    ExprPrecedence GetPrecedence() const override {
+        return EP_ATOM;
+    }
 
     double Execute(const SheetInterface&) const override {
         return value_;
@@ -196,13 +228,17 @@ public:
     }
 
     double Execute(const SheetInterface& sheet) const override {
+
         if (!pos_.IsValid()) {
             throw FormulaError(FormulaError::Category::Ref);
         }
+
         const CellInterface* cell = sheet.GetCell(pos_);
+
         if (!cell) {
             return 0.0;
         }
+
         auto value = cell->GetValue();
         if (std::holds_alternative<double>(value)) {
             return std::get<double>(value);
@@ -254,7 +290,11 @@ public:
         auto valueStr = ctx->NUMBER()->getSymbol()->getText();
         std::istringstream in(valueStr);
         in >> value;
-        if (!in) throw ParsingError("Invalid number: " + valueStr);
+
+        if (!in) {
+            throw ParsingError("Invalid number: " + valueStr);
+        }
+
         auto node = std::make_unique<NumberExpr>(value);
         args_.push_back(std::move(node));
     }
@@ -266,10 +306,15 @@ public:
         auto lhs = std::move(args_.back());
 
         BinaryOpExpr::Type type;
-        if (ctx->ADD()) type = BinaryOpExpr::Add;
-        else if (ctx->SUB()) type = BinaryOpExpr::Subtract;
-        else if (ctx->MUL()) type = BinaryOpExpr::Multiply;
-        else type = BinaryOpExpr::Divide;
+        if (ctx->ADD()) {
+            type = BinaryOpExpr::Add;
+        } else if (ctx->SUB()) {
+            type = BinaryOpExpr::Subtract;
+        } else if (ctx->MUL()) {
+            type = BinaryOpExpr::Multiply;
+        } else {
+            type = BinaryOpExpr::Divide;
+        }
 
         auto node = std::make_unique<BinaryOpExpr>(type, std::move(lhs), std::move(rhs));
         args_.back() = std::move(node);

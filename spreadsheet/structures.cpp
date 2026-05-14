@@ -89,10 +89,14 @@ bool FormulaError::operator==(FormulaError rhs) const {
 
 std::string_view FormulaError::ToString() const {
     switch (category_) {
-        case Category::Ref: return "#REF!";
-        case Category::Value: return "#VALUE!";
-        case Category::Arithmetic: return "#ARITHM!";
-        default: return "#ERROR!";
+        case Category::Ref: 
+            return "#REF!";
+        case Category::Value: 
+            return "#VALUE!";
+        case Category::Arithmetic: 
+            return "#ARITHM!";
+        default: 
+            return "#ERROR!";
     }
 }
 

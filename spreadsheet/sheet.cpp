@@ -51,12 +51,15 @@ void Sheet::UpdatePrintableArea(const Position& pos, bool is_cleared) {
     }
 }
 
-void Sheet::SetCell(Position pos, std::string text) {
+void Sheet::ValidatePosition(const Position& pos) const {
     if (!pos.IsValid()) {
         throw InvalidPositionException("Invalid position");
     }
+}
 
+void Sheet::SetCell(Position pos, std::string text) {
 
+    ValidatePosition(pos);
     std::vector<Position> new_deps;
 
     bool is_formula = (!text.empty() && text[0] == FORMULA_SIGN && text.size() > 1);
@@ -119,9 +122,7 @@ void Sheet::SetCell(Position pos, std::string text) {
 }
 
 const CellInterface* Sheet::GetCell(Position pos) const {
-    if (!pos.IsValid()) {
-        throw InvalidPositionException("Invalid position");
-    }
+    ValidatePosition(pos);
     auto it = cells_.find(pos);
     if (it == cells_.end()) {
         return nullptr;
@@ -133,9 +134,7 @@ const CellInterface* Sheet::GetCell(Position pos) const {
 }
 
 CellInterface* Sheet::GetCell(Position pos) {
-    if (!pos.IsValid()) {
-        throw InvalidPositionException("Invalid position");
-    }
+    ValidatePosition(pos);
     auto it = cells_.find(pos);
     if (it == cells_.end()) {
         return nullptr;
@@ -147,9 +146,7 @@ CellInterface* Sheet::GetCell(Position pos) {
 }
 
 void Sheet::ClearCell(Position pos) {
-    if (!pos.IsValid()) {
-        throw InvalidPositionException("Invalid position");
-    }
+    ValidatePosition(pos);
     auto it = cells_.find(pos);
     if (it == cells_.end()) {
         return;
@@ -184,12 +181,12 @@ void Sheet::PrintValues(std::ostream& output) const {
     if (size.rows == 0 || size.cols == 0) {
         return;
     }
-    for (int r = 0; r < size.rows; ++r) {
-        for (int c = 0; c < size.cols; ++c) {
-            if (c > 0) {
+    for (int row = 0; row < size.rows; ++row) {
+        for (int col = 0; col < size.cols; ++col) {
+            if (col > 0) {
                 output << '\t';
             }
-            Position pos{min_row_ + r, min_col_ + c};
+            Position pos{min_row_ + row, min_col_ + col};
             auto it = cells_.find(pos);
             if (it != cells_.end() && !it->second->GetText().empty()) {
                 Cell* mutable_cell = it->second.get();
@@ -211,12 +208,12 @@ void Sheet::PrintTexts(std::ostream& output) const {
     if (size.rows == 0 || size.cols == 0) {
         return;
     }
-    for (int r = 0; r < size.rows; ++r) {
-        for (int c = 0; c < size.cols; ++c) {
-            if (c > 0) {
+    for (int row = 0; row < size.rows; ++row) {
+        for (int col = 0; col < size.cols; ++col) {
+            if (col > 0) {
                 output << '\t';
             }
-            Position pos{min_row_ + r, min_col_ + c};
+            Position pos{min_row_ + row, min_col_ + col};
             auto it = cells_.find(pos);
             if (it != cells_.end() && !it->second->GetText().empty()) {
                 output << it->second->GetText();

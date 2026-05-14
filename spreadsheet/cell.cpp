@@ -56,6 +56,10 @@ Cell::Cell() : impl_(std::make_unique<EmptyImpl>()) {}
 Cell::~Cell() = default;
 
 void Cell::Set(std::string text) {
+    if (text_ == text) {
+        return;
+    }
+
     text_ = text;
     InvalidateCache();
     
@@ -88,10 +92,7 @@ void Cell::Set(std::string text) {
 }
 
 void Cell::Clear() {
-    text_.clear();
-    impl_ = std::make_unique<EmptyImpl>();
-    dependencies_.clear();
-    InvalidateCache();
+    Set("");
 }
 
 void Cell::Recalculate(const SheetInterface& sheet) {
